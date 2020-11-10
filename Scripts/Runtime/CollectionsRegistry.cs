@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using BrunoMikoski.ScriptableObjectCollections.Core;
 using UnityEngine;
 
@@ -114,30 +115,72 @@ namespace BrunoMikoski.ScriptableObjectCollections
             return false;
         }
 
-
-        public bool TryGetCollectionFromCollectableType(Type targetType, 
-            out ScriptableObjectCollection scriptableObjectCollection)
+        public bool TryGetCollectionsFromCollectableType(Type targetType,
+            out List<ScriptableObjectCollection> resultCollections)
         {
+            resultCollections = new List<ScriptableObjectCollection>();
             for (int i = 0; i < collections.Count; i++)
             {
                 ScriptableObjectCollection collection = collections[i];
                 if(collection.GetCollectionType() == targetType
-                   || targetType.BaseType == collection.GetCollectionType())
+                   || targetType.BaseType == collection.GetCollectionType()
+                   || collection.GetCollectionType().IsAssignableFrom(targetType))
                 {
-                    scriptableObjectCollection = collection;
-                    return true;
+                    resultCollections.Add(collection);
                 }
             }
-            
+
+            return resultCollections.Count > 0;
+        }
+        
+        // public bool TryGetFirstCollectionFromCollectableType(Type targetType, 
+        //     out ScriptableObjectCollection scriptableObjectCollection)
+        // {
+        //     for (int i = 0; i < resultCollections.Count; i++)
+        //     {
+        //         ScriptableObjectCollection collection = resultCollections[i];
+        //         if(collection.GetCollectionType() == targetType
+        //            || targetType.BaseType == collection.GetCollectionType()
+        //            || collection.GetCollectionType().IsAssignableFrom(targetType))
+        //         {
+        //             scriptableObjectCollection = collection;
+        //             return true;
+        //         }
+        //     }
+        //     
+        //     scriptableObjectCollection = null;
+        //     return false;
+        // }
+        
+        public bool TryGetFirstCollectionFromCollectableType<TargetType>(out ScriptableObjectCollection scriptableObjectCollection) where TargetType : CollectableScriptableObject
+        {
+            if (TryGetCollectionsFromCollectableType(typeof(TargetType), out List<ScriptableObjectCollection> resultCollection))
+            {
+                scriptableObjectCollection = resultCollection.First();
+                return true;
+            }
+
             scriptableObjectCollection = null;
             return false;
         }
-
-        public bool TryGetCollectionFromCollectableType<TargetType>(out ScriptableObjectCollection<TargetType> scriptableObjectCollection) where TargetType : CollectableScriptableObject
+        
+        public bool TryGetFirstCollectionFromCollectableType(Type targetType, out ScriptableObjectCollection scriptableObjectCollection)
         {
-            if (TryGetCollectionFromCollectableType(typeof(TargetType), out ScriptableObjectCollection resultCollection))
+            if (TryGetCollectionsFromCollectableType(targetType, out List<ScriptableObjectCollection> resultCollection))
             {
-                scriptableObjectCollection = (ScriptableObjectCollection<TargetType>) resultCollection;
+                scriptableObjectCollection = resultCollection.First();
+                return true;
+            }
+
+            scriptableObjectCollection = null;
+            return false;
+        }
+        
+        public bool TryGetFirstCollectionFromCollectableType<TargetType>(out ScriptableObjectCollection<TargetType> scriptableObjectCollection) where TargetType : CollectableScriptableObject
+        {
+            if(TryGetFirstCollectionFromCollectableType(typeof(TargetType), out ScriptableObjectCollection collection))
+            {
+                scriptableObjectCollection = (ScriptableObjectCollection<TargetType>) collection;
                 return true;
             }
 
@@ -261,7 +304,6 @@ namespace BrunoMikoski.ScriptableObjectCollections
         }
 
 #endif
-
     }
 }
 

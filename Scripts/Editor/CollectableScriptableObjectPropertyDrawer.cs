@@ -27,7 +27,7 @@ namespace BrunoMikoski.ScriptableObjectCollections
         }
 
         private bool initialized;
-        private ScriptableObjectCollection collection;
+        private List<ScriptableObjectCollection> collections;
         
         private CollectableScriptableObject[] options;
         private string[] optionsNames;
@@ -76,7 +76,7 @@ namespace BrunoMikoski.ScriptableObjectCollections
             if (collectableItem != null)
             {
                 DrawEditFoldoutButton(ref popupRect);
-                DrawGotoButton(collection, ref popupRect);
+                DrawGotoButton( ref popupRect);
             }
 
             using (new EditorGUI.PropertyScope(position, label, property))
@@ -148,16 +148,21 @@ namespace BrunoMikoski.ScriptableObjectCollections
             else
                 collectableType = fieldInfo.FieldType;
             
-            if (!CollectionsRegistry.Instance.TryGetCollectionFromCollectableType(collectableType,
-                out ScriptableObjectCollection resultCollection))
+            if (!CollectionsRegistry.Instance.TryGetCollectionsFromCollectableType(collectableType,
+                out List<ScriptableObjectCollection> resultCollections))
             {
                 optionsAttribute.DrawType = DrawType.AsReference;
                 return;
             }
 
-            collection = resultCollection;
+            collections = resultCollections;
+            List<CollectableScriptableObject> tempOptions = new List<CollectableScriptableObject>();
+            for (int i = 0; i < collections.Count; i++)
+            {
+                tempOptions.AddRange(collections[i].Items);
+            }
 
-            options = collection.Items.ToArray();
+            options = tempOptions.ToArray();
             List<string> displayOptions = GetDisplayOptions();
             displayOptions.Insert(0, CollectionEditorGUI.DEFAULT_NONE_ITEM_TEXT);
             
@@ -167,12 +172,12 @@ namespace BrunoMikoski.ScriptableObjectCollections
             currentObject = property.serializedObject.targetObject;
             initialized = true;
             
-            dropDown = new CollectableDropdown(new AdvancedDropdownState(), collection);
+            dropDown = new CollectableDropdown(new AdvancedDropdownState(), collectableType, collections);
         }
 
         private List<string> GetDisplayOptions()
         {
-            return collection.Items.Select(o => o.name).ToList();
+            return options.Select(o => o.name).ToList();
         }
 
         private void DrawSearchablePopup(Rect position, SerializedProperty property)
@@ -191,8 +196,8 @@ namespace BrunoMikoski.ScriptableObjectCollections
                 });
             }
         }
-        
-        public static void DrawGotoButton(ScriptableObjectCollection enumValues, ref Rect popupRect)
+
+        private void DrawGotoButton(ref Rect popupRect)
         {
             Rect buttonRect = popupRect;
             buttonRect.width = 30;
@@ -201,7 +206,7 @@ namespace BrunoMikoski.ScriptableObjectCollections
             buttonRect.x += popupRect.width;
             if (GUI.Button(buttonRect, CollectionEditorGUI.ARROW_RIGHT_CHAR))
             {
-                Selection.activeObject = enumValues;
+                Selection.activeObject = collectableItem.Collection;
             }
         }
 
