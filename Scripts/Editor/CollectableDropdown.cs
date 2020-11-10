@@ -8,86 +8,65 @@ namespace BrunoMikoski.ScriptableObjectCollections
 {
     public sealed class CollectableDropdown : AdvancedDropdown
     {
-        private List<ScriptableObjectCollection> availableCollections;
         private Action<CollectableScriptableObject> callback;
         private Type collectableType;
+        private List<CollectableScriptableObject> allAvailableCollectables;
+        private bool multipleCollections;
 
-        public CollectableDropdown(AdvancedDropdownState state,Type collectableType, List<ScriptableObjectCollection> availableCollections) : base(state)
+        public CollectableDropdown(AdvancedDropdownState state,Type targetCollectableType, List<ScriptableObjectCollection> availableCollections) : base(state)
         {
-            this.availableCollections = availableCollections;
-            this.minimumSize = new Vector2(200, 300);
-            this.collectableType = collectableType;
+            minimumSize = new Vector2(200, 300);
+            collectableType = targetCollectableType;
+            allAvailableCollectables = new List<CollectableScriptableObject>();
+            HashSet<ScriptableObjectCollection> collectionsWithResults = new HashSet<ScriptableObjectCollection>();
+            for (int i = 0; i < availableCollections.Count; i++)
+            {
+                ScriptableObjectCollection scriptableObjectCollection = availableCollections[i];
+
+                for (int j = 0; j < scriptableObjectCollection.Items.Count; j++)
+                {
+                    CollectableScriptableObject collectableScriptableObject = scriptableObjectCollection.Items[j];
+                    if (collectableScriptableObject.GetType() == collectableType ||
+                        collectableType.IsInstanceOfType(collectableScriptableObject))
+                    {
+                        allAvailableCollectables.Add(collectableScriptableObject);
+                        collectionsWithResults.Add(collectableScriptableObject.Collection);
+                    }
+                }
+            }
+
+            if (collectionsWithResults.Count > 1)
+                multipleCollections = true;
         }
 
         protected override AdvancedDropdownItem BuildRoot()
         {
             AdvancedDropdownItem root = new AdvancedDropdownItem(collectableType.Name);
+            root.AddChild(new AdvancedDropdownItem("None"));
 
-            if (availableCollections.Count == 1)
+            for (int i = 0; i < allAvailableCollectables.Count; i++)
             {
-                ScriptableObjectCollection firstCollection = availableCollections.First();
-                Type collectableType = firstCollection.GetCollectionType();
+                CollectableScriptableObject collectableScriptableObject = allAvailableCollectables[i];
+                AdvancedDropdownItem parent = root;
 
-                root.AddChild(new AdvancedDropdownItem("None"));
-                for (int i = 0; i < availableCollections.Count; i++)
+                if (multipleCollections)
                 {
-                    CollectableScriptableObject collectionItem = firstCollection[i];
-
-                    Type collectionType = collectionItem.GetType();
-                    if (!collectionType.IsAssignableFrom(collectableType))
-                        continue;
-                    
-                    if (collectionType == collectableType)
-                        root.AddChild(new CollectableDropdownItem(collectionItem));
-                    else
+                    parent = root.children.FirstOrDefault(dropdownItem =>
+                        dropdownItem.name.Equals(collectableScriptableObject.Collection.name, StringComparison.Ordinal));
+                    if (parent == null)
                     {
-                        AdvancedDropdownItem parent = GetOrCreateDropdownItemForType(root, collectionItem);
-                        parent.AddChild(new CollectableDropdownItem(collectionItem));
+                        parent = new AdvancedDropdownItem(collectableScriptableObject.Collection.name);
+                        root.AddChild(parent);
                     }
                 }
+
+                string targetName = collectableScriptableObject.name;
+                if (collectableScriptableObject.GetType() != collectableType)
+                    targetName = $"{collectableScriptableObject.name} [{collectableScriptableObject.GetType().Name}]";
+                parent.AddChild(new CollectableDropdownItem(collectableScriptableObject, targetName));
             }
-            else
-            {
-                for (int i = 0; i < availableCollections.Count; i++)
-                {
-                    ScriptableObjectCollection scriptableObjectCollection = availableCollections[i];
-
-                    AdvancedDropdownItem collectionDropdownItem = new AdvancedDropdownItem(scriptableObjectCollection.name);
-                    root.AddChild(collectionDropdownItem);
-
-                    for (int k = 0; k < availableCollections[i].Items.Count; k++)
-                    {
-                        CollectableScriptableObject collectionItem = availableCollections[i].Items[k];
-                        
-                        if (!collectionItem.GetType().IsAssignableFrom(collectableType))
-                            continue;
-
-                        if (collectionItem.GetType() == collectableType)
-                            collectionDropdownItem.AddChild(new CollectableDropdownItem(collectionItem));
-                        else
-                        {
-                            AdvancedDropdownItem parent = GetOrCreateDropdownItemForType(collectionDropdownItem, collectionItem);
-                            parent.AddChild(new CollectableDropdownItem(collectionItem));
-                        }
-                    }
-                }
-            }
-           
+            
             return root;
-        }
-
-        private AdvancedDropdownItem GetOrCreateDropdownItemForType(AdvancedDropdownItem root,
-            CollectableScriptableObject collectionItem)
-        {
-            AdvancedDropdownItem item = root.children.FirstOrDefault(dropdownItem =>
-                dropdownItem.name.Equals(collectionItem.GetType().Name, StringComparison.Ordinal));
-            if (item == null)
-            {
-                item = new AdvancedDropdownItem(collectionItem.GetType().Name);
-                root.AddChild(item);
-            }
-
-            return item;
         }
 
         protected override void ItemSelected(AdvancedDropdownItem item)

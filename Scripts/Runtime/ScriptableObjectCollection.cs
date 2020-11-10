@@ -43,7 +43,7 @@ namespace BrunoMikoski.ScriptableObjectCollections
                 return readOnlyList;
             }
         }
-
+        
         private void SyncGUID()
         {
             if (!string.IsNullOrEmpty(guid)) 

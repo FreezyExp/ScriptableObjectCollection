@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using BrunoMikoski.ScriptableObjectCollections.Core;
 using UnityEngine;
 
@@ -110,10 +111,10 @@ namespace BrunoMikoski.ScriptableObjectCollections
 
         public bool IsGeneratingCustomStaticFile(ScriptableObjectCollection collection)
         {
-            if (!TryGetSettingsForCollection(collection, out CollectionToSettings settings))
-                return false;
+            if (TryGetSettingsForCollection(collection, out CollectionToSettings settings))
+                return settings.generateCustomStaticFile;
 
-            return settings.generateCustomStaticFile;
+            return false;
         }
 
         

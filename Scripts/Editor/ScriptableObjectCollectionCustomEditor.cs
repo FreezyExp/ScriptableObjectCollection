@@ -21,7 +21,7 @@ namespace BrunoMikoski.ScriptableObjectCollections
             PartialStaticFileInDifferentAssembly = 1 << 0
         }
         
-        private ScriptableObjectCollection collection;
+        protected ScriptableObjectCollection collection;
         private string searchString = "";
         
         private List<CollectableScriptableObject> filteredItemList = new List<CollectableScriptableObject>();
@@ -558,9 +558,10 @@ namespace BrunoMikoski.ScriptableObjectCollections
                         using (EditorGUI.ChangeCheckScope changeCheck = new EditorGUI.ChangeCheckScope())
                         {
                             customStaticFileName = EditorGUILayout.TextField("Static Class Name", customStaticFileName);
-                        
+                            
                             if (changeCheck.changed)
                             {
+                                customStaticFileName.Sanitize();
                                 ScriptableObjectCollectionSettings.Instance.SetGenerateCustomStaticFileName(
                                     collection, customStaticFileName);
                             }

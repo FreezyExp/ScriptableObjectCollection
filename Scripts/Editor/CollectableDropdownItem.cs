@@ -10,5 +10,10 @@ namespace BrunoMikoski.ScriptableObjectCollections
         {
             Collectable = targetCollectable;
         }
+        
+        public CollectableDropdownItem(CollectableScriptableObject targetCollectable, string displayName) : base(displayName)
+        {
+            Collectable = targetCollectable;
+        }
     }
 }
