@@ -16,9 +16,43 @@ namespace BrunoMikoski.ScriptableObjectCollections
         private SerializedProperty collectionGUIDProperty;
 
         private CollectableScriptableObject cachedReference;
+        
+        private bool initialized;
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            Initialize(property);
+            
+            EditorGUI.PropertyField(position, objectAssetProperty, label, true);
+            if (objectAssetProperty.objectReferenceValue != cachedReference)
+            {
+                string collectableGUID = string.Empty;
+                string collectionGUID = string.Empty;
+            
+                if (objectAssetProperty.objectReferenceValue != null &&
+                    objectAssetProperty.objectReferenceValue is CollectableScriptableObject collectable)
+                {
+                    collectableGUID = collectable.GUID;
+                    collectionGUID = collectable.Collection.GUID;
+                    cachedReference = collectable;
+                }
+                else
+                {
+                    cachedReference = null;
+                }
+            
+                collectableGUIDProperty.stringValue = collectableGUID;
+                collectionGUIDProperty.stringValue = collectionGUID;
+                objectAssetProperty.serializedObject.ApplyModifiedProperties();
+                EditorUtility.SetDirty(objectAssetProperty.serializedObject.targetObject);
+            }
+        }
+
+        private void Initialize(SerializedProperty property)
+        {
+            if (initialized)
+                return;
+            
             objectAssetProperty = property.FindPropertyRelative(OBJECT_ASSET_PROPERTY_PATH);
             collectableGUIDProperty = property.FindPropertyRelative(COLLECTABLE_GUID_PROPERTY_PATH);
             collectionGUIDProperty = property.FindPropertyRelative(COLLECTION_GUID_PROPERTY_PATh);
@@ -54,32 +88,9 @@ namespace BrunoMikoski.ScriptableObjectCollections
 
             if (cachedReference == null && objectAssetProperty.objectReferenceValue != null)
                 cachedReference = objectAssetProperty.objectReferenceValue as CollectableScriptableObject;
-            
-            EditorGUI.PropertyField(position, objectAssetProperty, label, true);
-            if (objectAssetProperty.objectReferenceValue != cachedReference)
-            {
-                string collectableGUID = string.Empty;
-                string collectionGUID = string.Empty;
-            
-                if (objectAssetProperty.objectReferenceValue != null &&
-                    objectAssetProperty.objectReferenceValue is CollectableScriptableObject collectable)
-                {
-                    collectableGUID = collectable.GUID;
-                    collectionGUID = collectable.Collection.GUID;
-                    cachedReference = collectable;
-                }
-                else
-                {
-                    cachedReference = null;
-                }
-            
-                collectableGUIDProperty.stringValue = collectableGUID;
-                collectionGUIDProperty.stringValue = collectionGUID;
-                objectAssetProperty.serializedObject.ApplyModifiedProperties();
-                EditorUtility.SetDirty(objectAssetProperty.serializedObject.targetObject);
-            }
-        }
 
+            initialized = true;
+        }
     }
 }
 

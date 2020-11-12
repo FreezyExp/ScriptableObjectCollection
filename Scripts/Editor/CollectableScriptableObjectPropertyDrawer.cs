@@ -69,7 +69,6 @@ namespace BrunoMikoski.ScriptableObjectCollections
                 return;  
             }
             
-            
             Rect popupRect = position;
             popupRect.height = 15;
 
@@ -87,7 +86,6 @@ namespace BrunoMikoski.ScriptableObjectCollections
                 EditorGUI.indentLevel = 0;
 
                 bool showMixedValue = EditorGUI.showMixedValue;
-
 
                 switch (optionsAttribute.DrawType)
                 {

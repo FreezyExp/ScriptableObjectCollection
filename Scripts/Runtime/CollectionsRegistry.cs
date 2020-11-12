@@ -151,10 +151,42 @@ namespace BrunoMikoski.ScriptableObjectCollections
         //     scriptableObjectCollection = null;
         //     return false;
         // }
-        
-        public bool TryGetFirstCollectionFromCollectableType<TargetType>(out ScriptableObjectCollection scriptableObjectCollection) where TargetType : CollectableScriptableObject
+
+        public bool TryGetCollectionsOfType(Type targetType,
+            out List<ScriptableObjectCollection> resultCollections)
         {
-            if (TryGetCollectionsFromCollectableType(typeof(TargetType), out List<ScriptableObjectCollection> resultCollection))
+            resultCollections = new List<ScriptableObjectCollection>();
+            for (int i = 0; i < collections.Count; i++)
+            {
+                ScriptableObjectCollection collection = collections[i];
+                if (collection.GetType() == targetType)
+                    resultCollections.Add(collection);
+            }
+
+            return resultCollections.Count > 0;
+        }
+
+        public bool TryGetCollectionsOfType<TCollectionType>(out List<TCollectionType> resultList) where TCollectionType : ScriptableObjectCollection
+        {
+            if (TryGetCollectionsOfType(typeof(TCollectionType), out List<ScriptableObjectCollection> resultCollection))
+            {
+                resultList = new List<TCollectionType>();
+                for (int i = 0; i < resultCollection.Count; i++)
+                {
+                    resultList.Add(resultCollection[i] as TCollectionType);
+                }
+
+                return true;
+            }
+
+            resultList = null;
+            return false;
+        }
+
+        
+        public bool TryGetFirstCollectionFromCollectableType<TCollectableType>(out ScriptableObjectCollection scriptableObjectCollection) where TCollectableType : CollectableScriptableObject
+        {
+            if (TryGetCollectionsFromCollectableType(typeof(TCollectableType), out List<ScriptableObjectCollection> resultCollection))
             {
                 scriptableObjectCollection = resultCollection.First();
                 return true;

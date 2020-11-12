@@ -49,10 +49,11 @@ namespace BrunoMikoski.ScriptableObjectCollections
                 CollectableScriptableObject collectableScriptableObject = allAvailableCollectables[i];
                 AdvancedDropdownItem parent = root;
 
-                if (multipleCollections)
+                if (multipleCollections && collectableScriptableObject.Collection.Count > 1)
                 {
                     parent = root.children.FirstOrDefault(dropdownItem =>
-                        dropdownItem.name.Equals(collectableScriptableObject.Collection.name, StringComparison.Ordinal));
+                        dropdownItem.name.Equals(collectableScriptableObject.Collection.name,
+                            StringComparison.Ordinal));
                     if (parent == null)
                     {
                         parent = new AdvancedDropdownItem(collectableScriptableObject.Collection.name);
@@ -60,10 +61,7 @@ namespace BrunoMikoski.ScriptableObjectCollections
                     }
                 }
 
-                string targetName = collectableScriptableObject.name;
-                if (collectableScriptableObject.GetType() != collectableType)
-                    targetName = $"{collectableScriptableObject.name} [{collectableScriptableObject.GetType().Name}]";
-                parent.AddChild(new CollectableDropdownItem(collectableScriptableObject, targetName));
+                parent.AddChild(new CollectableDropdownItem(collectableScriptableObject, collectableScriptableObject.name));
             }
             
             return root;
